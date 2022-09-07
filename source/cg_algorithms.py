@@ -15,7 +15,6 @@ def draw_line(p_list, algorithm):
     x0, y0 = p_list[0]
     x1, y1 = p_list[1]
     result = []
-    print(algorithm)
     if algorithm == 'Naive':
         if x0 == x1:
             for y in range(y0, y1 + 1):
@@ -48,7 +47,30 @@ def draw_line(p_list, algorithm):
                     result.append((x,round(y)))
                     y = y + k
     elif algorithm == 'Bresenham':
-        pass
+        #Brasenham画线算法
+        dx = abs(x1-x0)
+        dy = abs(y1-y0)
+        xstep = 1 if x0 <= x1 else -1
+        ystep = 1 if y0 <= y1 else -1
+        if abs(dy)<=abs(dx):     #斜率小于1
+            p = 2*abs(dy) - abs(dx)   #引入决策变量，为了提高精度，将小数与除法转化为整数与减法
+            y = y0
+            for x in range(x0,x1+xstep,xstep):
+                result.append((x,y))
+                if p >= 0:
+                    p = p-2*dx
+                    y = y+ystep
+                p = p+2*dy
+        else:                   #斜率大于一
+            p = 2*abs(dx) - abs(dy)   #引入决策变量，为了提高精度，将小数与除法转化为整数与减法
+            x = x0
+            for y in range(y0,y1+ystep,ystep):
+                result.append((x,y))
+                if p >= 0:
+                    p = p-2*dy
+                    x = x+xstep
+                p = p+2*dx
+
     return result
 
 
