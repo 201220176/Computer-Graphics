@@ -13,7 +13,7 @@ if __name__ == '__main__':
     output_dir = sys.argv[2]
     os.makedirs(output_dir, exist_ok=True)
 
-    item_dict = {}
+    item_dict = {}          #待画的图形信息，以id为key,value包括所给类型、点、画法
     pen_color = np.zeros(3, np.uint8)
     width = 0
     height = 0
@@ -22,25 +22,28 @@ if __name__ == '__main__':
         line = fp.readline()
         while line:
             line = line.strip().split(' ')
+            para_num = len(line)            #参数长度
+            point = []                      #点的坐标list
             if line[0] == 'resetCanvas':
                 width = int(line[1])
                 height = int(line[2])
                 item_dict = {}
             elif line[0] == 'saveCanvas':
+                #画出目前在item_dict中的图形并存储
                 save_name = line[1]
                 canvas = np.zeros([height, width, 3], np.uint8)
                 canvas.fill(255)
                 for item_type, p_list, algorithm, color in item_dict.values():
                     if item_type == 'line':
                         pixels = alg.draw_line(p_list, algorithm)
-                        for x, y in pixels:
-                            canvas[height - 1 - y, x] = color
                     elif item_type == 'polygon':
-                        pass
+                        pixels = alg.draw_polygon(p_list, algorithm)
                     elif item_type == 'ellipse':
-                        pass
+                        pixels = alg.draw_ellipse(p_list)
                     elif item_type == 'curve':
-                        pass
+                        pixels = alg.draw_curve(p_list, algorithm)
+                    for x, y in pixels:
+                        canvas[height - 1 - y, x] = color
                 Image.fromarray(canvas).save(os.path.join(output_dir, save_name + '.bmp'), 'bmp')
             elif line[0] == 'setColor':
                 pen_color[0] = int(line[1])
@@ -54,6 +57,22 @@ if __name__ == '__main__':
                 y1 = int(line[5])
                 algorithm = line[6]
                 item_dict[item_id] = ['line', [[x0, y0], [x1, y1]], algorithm, np.array(pen_color)]
+            elif line[0] == 'drawPolygon':
+                item_id = line[1]
+                i = 2
+                while i+1 < (para_num):
+                    point.append([int(line[i]),int(line[i+1])])
+                    i += 2
+                algorithm = line[i]
+                item_dict[item_id] = ['polygon', point, algorithm, np.array(pen_color)]
+            elif line[0] == 'drawEllipse':
+                item_id = line[1]
+                i = 2
+                while i+1 < (para_num):
+                    point.append([int(line[i]),int(line[i+1])])
+                    i += 2
+                item_dict[item_id] = ['ellipse', point, '', np.array(pen_color)]
+                
             ...
 
             line = fp.readline()

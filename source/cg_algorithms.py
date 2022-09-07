@@ -3,6 +3,7 @@
 
 # 本文件只允许依赖math库
 import math
+from unittest import result
 
 
 def draw_line(p_list, algorithm):
@@ -94,7 +95,12 @@ def draw_ellipse(p_list):
     :param p_list: (list of list of int: [[x0, y0], [x1, y1]]) 椭圆的矩形包围框左上角和右下角顶点坐标
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    print(p_list)
+    result = []
+    for i in range(len(p_list)):
+        line = draw_line([p_list[i - 1], p_list[i]], '')
+        result += line
+    return result
 
 
 def draw_curve(p_list, algorithm):
