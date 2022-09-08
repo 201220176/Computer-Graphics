@@ -95,11 +95,49 @@ def draw_ellipse(p_list):
     :param p_list: (list of list of int: [[x0, y0], [x1, y1]]) 椭圆的矩形包围框左上角和右下角顶点坐标
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    print(p_list)
+
+    #x^2 / a^2 + y^2 / b^2 = 1,F(x,y)= b^2 * x^2 + a^2 * y^2 - a^2 * b^2 = 0
+
     result = []
-    for i in range(len(p_list)):
-        line = draw_line([p_list[i - 1], p_list[i]], '')
-        result += line
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    a = round(abs(x1-x0)/2)
+    b = round(abs(y1-y0)/2)
+    xc = round((x1+x0)/2)
+    yc = round((y1+y0)/2)
+    sqa = a**2
+    sqb = b**2
+    
+    if a==0 or b==0:
+        return draw_line(p_list,'DDA')
+    
+    x,y = 0,b
+    d = sqb + sqa*(-b+0.25)     #决策变量，从(0,b)点开始。di = F(xi+1, yi-0.5)
+    while sqb*(x)< sqa*(y):     #上半部分，dx>dy，即2xb^2>2ya^2
+        result.append((x+xc,y+yc))
+        result.append((x+xc,-y+yc))
+        result.append((-x+xc,y+yc))
+        result.append((-x+xc,-y+yc))
+        if d < 0:
+            d += sqb*(2*x+3)    #增量 di+1-di
+        else:
+            d += (sqb*(2*x+3)+sqa*(-2*y+2))
+            y-=1
+        x+=1   
+    
+    d = sqb*(x+0.5)**2 + sqa*(y-1)**2 -sqa*sqb
+    while y>=0:                 #下半部分，dx<dy，即2xb^2<2ya^2
+        result.append((x+xc,y+yc))
+        result.append((x+xc,-y+yc))
+        result.append((-x+xc,y+yc))
+        result.append((-x+xc,-y+yc))
+        if d < 0:
+            d += (sqb*(2*x+2)+sqa*(3-2*y))
+            x += 1
+        else:
+            d += sqa*(3-2*y)
+        y-=1
+
     return result
 
 
