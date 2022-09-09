@@ -148,7 +148,30 @@ def draw_curve(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'Bezier'和'B-spline'（三次均匀B样条曲线，曲线不必经过首末控制点）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    print(p_list,algorithm)
+    result = []
+    n = len(p_list)     #控制点个数
+    if algorithm == 'Bezier':
+        t=0.001
+        while t<1:                          #取1000次比例系数t 
+            temp = []
+            for j in range(n-1):            #首先将控制点进行一轮递归，得到n-1个新的控制点，存在temp中
+                    x0,y0=p_list[j]
+                    x1,y1=p_list[j+1]
+                    x,y=(1-t)*x0+t*x1,(1-t)*y0+t*y1
+                    temp.append((x,y))
+            for i in range(n-2):            #再进行n-2次控制点递归，即可得到一个曲线上的点
+                for j in range(n-i-2):      #每次开始内层循环，都剩余n-i-1个控制点，故需要循环n-i-2次以得到最终点
+                    x0,y0=temp[j]
+                    x1,y1=temp[j+1]
+                    x,y=(1-t)*x0+t*x1,(1-t)*y0+t*y1
+                    temp[j]=(x,y)
+            x,y=round(temp[0][0]),round(temp[0][1])
+            result.append((x,y))
+            t+=0.001
+    elif algorithm == 'B-spline':
+        pass
+    return result
 
 
 def translate(p_list, dx, dy):

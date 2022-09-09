@@ -72,6 +72,14 @@ if __name__ == '__main__':
                     point.append([int(line[i]),int(line[i+1])])
                     i += 2
                 item_dict[item_id] = ['ellipse', point, '', np.array(pen_color)]
+            elif line[0] == 'drawCurve':
+                item_id = line[1]
+                i = 2
+                while i+1 < (para_num):
+                    point.append([int(line[i]),int(line[i+1])])
+                    i += 2
+                algorithm = line[i]
+                item_dict[item_id] = ['curve', point, algorithm, np.array(pen_color)]
                 
             ...
 
