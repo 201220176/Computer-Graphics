@@ -40,13 +40,13 @@ def draw_line(p_list, algorithm):
                 x = x0
                 for y in range (y0,y1+step,step):
                     result.append((round(x),y))
-                    x = x + (1/k)
+                    x = x + (1/k)*step
             else:           #斜率小于等于1，x每增加1，y增加k取整
                 step = 1 if x0 <= x1 else -1
                 y = y0
                 for x in range (x0,x1+step,step):
                     result.append((x,round(y)))
-                    y = y + k
+                    y = y + k*step
     elif algorithm == 'Bresenham':
         #Brasenham画线算法
         dx = abs(x1-x0)
@@ -148,9 +148,9 @@ def draw_curve(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'Bezier'和'B-spline'（三次均匀B样条曲线，曲线不必经过首末控制点）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    print(p_list,algorithm)
     result = []
     n = len(p_list)     #控制点个数
+    result.append((round(p_list[0][0]), round(p_list[0][1])))
     if algorithm == 'Bezier':
         t=0.001
         while t<1:                          #取1000次比例系数t 
@@ -182,7 +182,10 @@ def translate(p_list, dx, dy):
     :param dy: (int) 垂直方向平移量
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for i in p_list:
+        result.append([i[0] + dx, i[1] + dy])
+    return result
 
 
 def rotate(p_list, x, y, r):
