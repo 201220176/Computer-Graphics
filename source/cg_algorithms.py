@@ -3,6 +3,8 @@
 
 # 本文件只允许依赖math库
 import math
+from pydoc import plain
+from re import X
 from unittest import result
 
 
@@ -197,7 +199,15 @@ def rotate(p_list, x, y, r):
     :param r: (int) 顺时针旋转角度（°）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for p in p_list:
+        x1 , y1 = p[0],p[1]
+        d=math.radians(r)
+        x2 = (x1-x)*math.cos(d)-(y1-y)*math.sin(d) + x
+        y2 = (x1-x)*math.sin(d)+(y1-y)*math.cos(d) + y
+        result.append((round(x2),round(y2)))
+
+    return result
 
 
 def scale(p_list, x, y, s):
@@ -209,7 +219,15 @@ def scale(p_list, x, y, s):
     :param s: (float) 缩放倍数
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+
+    result = []
+    for p in p_list:
+        x1 , y1 = p[0],p[1]
+        x2 = (x1-x)*s+ x
+        y2 = (y1-y)*s+ y
+        result.append((round(x2),round(y2)))
+
+    return result
 
 
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
@@ -223,4 +241,74 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    if algorithm == "Cohen-Sutherland":     #编码裁剪算法
+         while True:
+            #计算区域码
+            code0,code1 = 0,0
+            code0 += 1 if x0 < x_min else 0
+            code0 += 2 if x0 > x_max else 0
+            code0 += 4 if y0 < y_min else 0
+            code0 += 8 if y0 > y_max else 0
+            code1 += 1 if x1 < x_min else 0
+            code1 += 2 if x1 > x_max else 0
+            code1 += 4 if y1 < y_min else 0
+            code1 += 8 if y1 > y_max else 0
+            if code0 == 0 and code1 == 0:
+                return [[round(x0), round(y0 )], [round(x1), round(y1 )]]
+            elif code0 & code1 != 0:
+                return []
+            else:
+                if code0 == 0:
+                    x0, y0, x1, y1 = x1, y1, x0, y0
+                    code0, code1 = code1, code0
+                if code0 & 1 == 1:
+                    u = (x_min - x0) / (x1 - x0)
+                    x0,y0 = x_min,y0 + u * (y1 - y0)
+                elif code0 & 2 == 2:
+                    u = (x_max - x0) / (x1 - x0)
+                    x0, y0 = x_max,y0 + u*(y1 - y0)                
+                elif code0 & 4 == 4:
+                    u = (y_min - y0) / (y1 - y0)
+                    x0 ,y0 = x0+u * (x1 - x0),y_min                
+                elif code0 & 8 == 8:
+                    u = (y_max - y0) / (y1 - y0)
+                    x0 , y0 = x0+u * (x1 - x0),y_max
+    elif algorithm == "Liang-Barsky":   #梁友栋-Barsky裁剪算法
+        dx, dy = x1 - x0, y1 - y0
+        p = [-dx, dx, -dy, dy]
+        q = [x0 - x_min, x_max - x0, y0 - y_min, y_max - y0]
+        u1 = 0
+        u2 = 1
+        if dx == 0:             #平行于y轴
+            if q[0]<0 or q[1]<0:    #完全在窗口外
+                return []
+            else:
+                for i in range(2):
+                    if p[i+2]<0:    #线段(及其延长线)从边界外部进入内部，3为下边界，4为上边界
+                        u1 = max(u1, q[i+2] / p[i+2])   
+                    else:           #线段(及其延长线)从边界内部进入外部
+                        u2 = min(u2, q[i+2] / p[i+2])   
+        elif dy == 0:           #平行于x轴
+            if q[2]<0 or q[3]<0:    #完全在窗口外
+                return []
+            else:
+                for i in range(2):
+                    if p[i]<0:
+                        u1 = max(u1, q[i] / p[i])
+                    else:
+                        u2 = min(u2, q[i] / p[i])
+        else:                   #不平行于边界
+            for i in range(4):
+                if p[i] < 0:
+                    u1 = max(u1, q[i] / p[i])
+                else:
+                    u2 = min(u2, q[i] / p[i])
+        #u1为截点1关于原直线的比例，u2为截点2关于原直线的比例
+        if u1>u2:               #舍弃该线段
+            return []
+        else:
+            x_new1,y_new1=x0 + u1 * (x1 - x0),y0 + u1 * (y1 - y0)
+            x_new2,y_new2=x0 + u2 * (x1 - x0),y0 + u2 * (y1 - y0)
+            return [[round(x_new1), round(y_new1 )], [round(x_new2), round(y_new2 )]]
