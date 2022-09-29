@@ -106,9 +106,9 @@ class MyCanvas(QGraphicsView):
             self.main_window.statusBar().showMessage('对象不存在')
         else:
             #清除状态
-            self.removeState()            
+            self.removeState()
             #删除scene中的记录
-            self.scene().removeItem(self.item_dict[target_id])   
+            self.scene().removeItem(self.item_dict[target_id])
             #删除画布item字典中的记录
             del self.item_dict[target_id]
             #删除画布list_widget中的记录
@@ -182,6 +182,9 @@ class MyCanvas(QGraphicsView):
                 self.old_p_list = self.item_dict[self.selected_id].p_list
         elif self.status == 'clip':
             if self.selected_id != '':
+                self.temp_id=str(int(self.main_window.get_id())+1)
+                self.temp_item = MyItem(self.temp_id, 'polygon', [[x, y], [x, y]], 'DDA',self.temp_color)    #增加裁剪框
+                self.scene().addItem(self.temp_item)
                 self.old_pos = pos
                 self.old_p_list = self.item_dict[self.selected_id].p_list
         self.updateScene([self.sceneRect()])
@@ -204,7 +207,7 @@ class MyCanvas(QGraphicsView):
         elif self.status == 'rotate':
             if self.selected_id != '':
                 x0,y0=self.centerPoint[0],self.centerPoint[1]       #中心点
-                x1,y1=self.old_pos.x(),self.old_pos.y()             #鼠标点击的点
+                x1,y1=self.old_pos.x(),self.old_pos.y()           #鼠标点击的点
                 x2,y2=x,y                                           #鼠标移动至的点，求这三点的夹角
                 b_len = pow(pow(x1-x0,2)+pow(y1-y0,2),0.5)
                 c_len = pow(pow(x2-x0,2)+pow(y2-y0,2),0.5)
@@ -228,8 +231,16 @@ class MyCanvas(QGraphicsView):
                 self.item_dict[self.selected_id].p_list = alg.scale(self.old_p_list,x0,y0, s)
         elif self.status == 'clip':
             if self.selected_id != '':
-                x1,y1=self.old_pos.x(),self.old_pos.y()             #鼠标点击的点
+                x1,y1=round(self.old_pos.x()),round(self.old_pos.y())             #鼠标点击的点
                 x2,y2=x,y                                           #鼠标移动至的点,画出一个之间连线的临时的框
+                self.temp_item.p_list[0] = [x1, y1]
+                self.temp_item.p_list[1] = [x1, y2]
+                if len(self.temp_item.p_list) == 2:
+                    self.temp_item.p_list.append ([x2, y2])
+                    self.temp_item.p_list.append ([x2, y1])
+                else:
+                    self.temp_item.p_list[2]=[x2, y2]
+                    self.temp_item.p_list[3]=[x2, y1]
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
@@ -251,8 +262,10 @@ class MyCanvas(QGraphicsView):
                 x_min,x_max = round(min(self.old_pos.x(),self.now_pos.x())),round(max(self.old_pos.x(),self.now_pos.x()))
                 y_min,y_max = round(min(self.old_pos.y(),self.now_pos.y())),round(max(self.old_pos.y(),self.now_pos.y()))
                 self.item_dict[self.selected_id].p_list = alg.clip(self.old_p_list,x_min,y_min,x_max,y_max, self.temp_algorithm)
+                self.scene().removeItem(self.temp_item)
                 if self.item_dict[self.selected_id].p_list == []:
                     self.delete_item(self.selected_id)
+                
         self.updateScene([self.sceneRect()])
         super().mouseReleaseEvent(event)
 
